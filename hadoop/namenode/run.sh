@@ -6,17 +6,28 @@ if [ ! -d $namedir ]; then
   exit 2
 fi
 
-if [ -z "$CLUSTER_NAME" ]; then
-  echo "Cluster name not specified"
-  exit 2
-fi
 
 echo "remove lost+found from $namedir"
 rm -r $namedir/lost+found
 
+
+echo "Start checking"
 if [ "`ls -A $namedir`" == "" ]; then
-  echo "Formatting namenode name directory: $namedir"
-  $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode -format $CLUSTER_NAME
+  echo "$namedir is empty"
+  if [ "${ROLE,,}" == "active" ]; then
+    echo "role is active"
+    if [ -z "$CLUSTER_NAME" ]; then
+      echo "Cluster name not specified"
+      exit 2
+    fi
+    echo "Formatting namenode name directory: $namedir"
+    echo "Y" | $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode -format -clusterid $CLUSTER_NAME
+  else
+    echo "BootStrapping namenode name directory: $namedir"
+    $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby
+  fi
 fi
 
-$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode
+$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode &
+$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK -nonInteractive
+$HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR zkfc

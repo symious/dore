@@ -1,33 +1,296 @@
 version: "3"
 
 services:
-  namenode:
+  zoo1:
+    image: zookeeper
+    restart: always
+    hostname: zoo1
+    container_name: zoo1
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+    volumes:
+      - hadoop_zk_zoo1_data:/data
+      - hadoop_zk_zoo1_datalog:/datalog
+
+  zoo2:
+    image: zookeeper
+    restart: always
+    hostname: zoo2
+    container_name: zoo2
+    ports:
+      - 2182:2181
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+    volumes:
+      - hadoop_zk_zoo2_data:/data
+      - hadoop_zk_zoo2_datalog:/datalog
+
+  zoo3:
+    image: zookeeper
+    restart: always
+    hostname: zoo3
+    container_name: zoo3
+    ports:
+      - 2183:2181
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+    volumes:
+      - hadoop_zk_zoo3_data:/data
+      - hadoop_zk_zoo3_datalog:/datalog
+
+  dfsrouter-r1:
+    image: symious/hadoop-dfsrouter:3.4.0-SNAPSHOT_20211027
+    hostname: dfsrouter-r1
+    container_name: dfsrouter-r1
+    restart: always
+    ports:
+      - 50071:50071
+    env_file:
+      - ./hadoop.env
+
+  dfsrouter-r2:
+    image: symious/hadoop-dfsrouter:3.4.0-SNAPSHOT_20211027
+    hostname: dfsrouter-r2
+    container_name: dfsrouter-r2
+    restart: always
+    ports:
+      - 50072:50071
+    env_file:
+      - ./hadoop.env
+
+  dfsrouter-r3:
+    image: symious/hadoop-dfsrouter:3.4.0-SNAPSHOT_20211027
+    hostname: dfsrouter-r3
+    container_name: dfsrouter-r3
+    restart: always
+    ports:
+      - 50073:50071
+    env_file:
+      - ./hadoop.env
+
+  journalnode-jn1:
+    image: symious/hadoop-journalnode:3.4.0-SNAPSHOT_20211027
+    hostname: journalnode-jn1
+    container_name: journalnode-jn1
+    restart: always
+    ports:
+      - 8480:8480
+      - 8485:8485
+    volumes:
+      - hadoop_journalnode_jn1:/hadoop/dfs/journal
+    env_file:
+      - ./hadoop.env
+
+  journalnode-jn2:
+    image: symious/hadoop-journalnode:3.4.0-SNAPSHOT_20211027
+    hostname: journalnode-jn2
+    container_name: journalnode-jn2
+    restart: always
+    ports:
+      - 18480:8480
+      - 18485:8485
+    volumes:
+      - hadoop_journalnode_jn2:/hadoop/dfs/journal
+    env_file:
+      - ./hadoop.env
+
+  journalnode-jn3:
+    image: symious/hadoop-journalnode:3.4.0-SNAPSHOT_20211027
+    hostname: journalnode-jn3
+    container_name: journalnode-jn3
+    restart: always
+    ports:
+      - 28480:8480
+      - 28485:8485
+    volumes:
+      - hadoop_journalnode_jn3:/hadoop/dfs/journal
+    env_file:
+      - ./hadoop.env
+
+  namenode-ns1-nn1:
     image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
-    container_name: namenode
+    hostname: namenode-ns1-nn1
+    container_name: namenode-ns1-nn1
     restart: always
     ports:
       - 9870:9870
       - 9000:9000
     volumes:
-      - hadoop_namenode:/hadoop/dfs/name
+      - hadoop_namenode_ns1_nn1:/hadoop/dfs/name
     environment:
-      - CLUSTER_NAME=test
+      - ROLE=active
+      - CLUSTER_NAME=JANUS
     env_file:
       - ./hadoop.env
 
-  datanode:
+  namenode-ns1-nn2:
+    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    hostname: namenode-ns1-nn2
+    container_name: namenode-ns1-nn2
+    restart: always
+    ports:
+      - 9871:9870
+      - 9001:9000
+    volumes:
+      - hadoop_namenode_ns1_nn2:/hadoop/dfs/name
+    env_file:
+      - ./hadoop.env
+
+  namenode-ns1-ob1:
+    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    hostname: namenode-ns1-ob1
+    container_name: namenode-ns1-ob1
+    restart: always
+    ports:
+      - 9872:9870
+      - 9002:9000
+    environment:
+      - SERVICE_PRECONDITION="namenode-ns1-nn1:9000 namenode-ns1-nn2:9000"
+      - ROLE=observer
+    volumes:
+      - hadoop_namenode_ns1_ob1:/hadoop/dfs/name
+    env_file:
+      - ./hadoop.env
+
+  namenode-ns1-ob1-transition:
+    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    hostname: namenode-ns1-ob1-transition
+    container_name: namenode-ns1-ob1-transition
+    restart: no
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode-ns1-ob1
+    entrypoint:  [ "$HADOOP_HOME/bin/hdfs", "haadmin", "-ns", "ns1", "-transitionToObserver", "--forcemanual", "ob1"  ]
+
+  namenode-ns2-nn1:
+    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    hostname: namenode-ns2-nn1
+    container_name: namenode-ns2-nn1
+    restart: always
+    ports:
+      - 19870:9870
+      - 19000:9000
+    volumes:
+      - hadoop_namenode_ns2_nn1:/hadoop/dfs/name
+    environment:
+      - ROLE=active
+      - CLUSTER_NAME=JANUS
+    env_file:
+      - ./hadoop.env
+
+  namenode-ns2-nn2:
+    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    hostname: namenode-ns2-nn2
+    container_name: namenode-ns2-nn2
+    restart: always
+    ports:
+      - 19871:9870
+      - 19001:9000
+    volumes:
+      - hadoop_namenode_ns2_nn2:/hadoop/dfs/name
+    env_file:
+      - ./hadoop.env
+
+  namenode-ns2-ob1:
+    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    hostname: namenode-ns2-ob1
+    container_name: namenode-ns2-ob1
+    restart: always
+    ports:
+      - 19872:9870
+      - 19002:9000
+    environment:
+      - SERVICE_PRECONDITION="namenode-ns2-nn1:9000 namenode-ns2-nn2:9000"
+      - ROLE=observer
+    volumes:
+      - hadoop_namenode_ns2_ob1:/hadoop/dfs/name
+    env_file:
+      - ./hadoop.env
+
+  datanode-dn1:
     image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
-    container_name: datanode
+    hostname: datanode-dn1
+    container_name: datanode-dn1
     restart: always
     ports:
       - 9864:9864
     volumes:
-      - hadoop_datanode:/hadoop/dfs/data
-    environment:
-      SERVICE_PRECONDITION: "namenode:9870"
+      - hadoop_datanode_dn1:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+
+  datanode-dn2:
+    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    hostname: datanode-dn2
+    container_name: datanode-dn2
+    restart: always
+    ports:
+      - 9865:9864
+    volumes:
+      - hadoop_datanode_dn2:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+
+  datanode-dn3:
+    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    hostname: datanode-dn3
+    container_name: datanode-dn3
+    restart: always
+    ports:
+      - 9866:9864
+    volumes:
+      - hadoop_datanode_dn3:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+
+  datanode-dn4:
+    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    hostname: datanode-dn4
+    container_name: datanode-dn4
+    restart: always
+    ports:
+      - 9867:9864
+    volumes:
+      - hadoop_datanode_dn4:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+
+  datanode-dn5:
+    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    hostname: datanode-dn5
+    container_name: datanode-dn5
+    restart: always
+    ports:
+      - 9868:9864
+    volumes:
+      - hadoop_datanode_dn5:/hadoop/dfs/data
     env_file:
       - ./hadoop.env
 
 volumes:
-  hadoop_namenode:
-  hadoop_datanode:
+  hadoop_zk_zoo1_data:
+  hadoop_zk_zoo2_data:
+  hadoop_zk_zoo3_data:
+  hadoop_zk_zoo1_datalog:
+  hadoop_zk_zoo2_datalog:
+  hadoop_zk_zoo3_datalog:
+  hadoop_journalnode_jn1:
+  hadoop_journalnode_jn2:
+  hadoop_journalnode_jn3:
+  hadoop_namenode_ns1_nn1:
+  hadoop_namenode_ns1_nn2:
+  hadoop_namenode_ns1_ob1:
+  hadoop_namenode_ns2_nn1:
+  hadoop_namenode_ns2_nn2:
+  hadoop_namenode_ns2_ob1:
+  hadoop_datanode_dn1:
+  hadoop_datanode_dn2:
+  hadoop_datanode_dn3:
+  hadoop_datanode_dn4:
+  hadoop_datanode_dn5:
