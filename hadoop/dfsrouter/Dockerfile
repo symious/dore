@@ -1,6 +1,6 @@
-FROM symious/hadoop-base:3.4.0-SNAPSHOT_20211027
+FROM symious/hadoop-base
 
-HEALTHCHECK CMD curl -f http://localhost:8888/ || exit 1
+HEALTHCHECK CMD curl -f http://localhost:50071/ || exit 1
 
 ADD run.sh /run.sh
 RUN chmod a+x /run.sh

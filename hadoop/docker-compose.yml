@@ -44,7 +44,7 @@ services:
       - hadoop_zk_zoo3_datalog:/datalog
 
   dfsrouter-r1:
-    image: symious/hadoop-dfsrouter:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-dfsrouter
     hostname: dfsrouter-r1
     container_name: dfsrouter-r1
     restart: always
@@ -54,7 +54,7 @@ services:
       - ./hadoop.env
 
   dfsrouter-r2:
-    image: symious/hadoop-dfsrouter:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-dfsrouter
     hostname: dfsrouter-r2
     container_name: dfsrouter-r2
     restart: always
@@ -64,7 +64,7 @@ services:
       - ./hadoop.env
 
   dfsrouter-r3:
-    image: symious/hadoop-dfsrouter:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-dfsrouter
     hostname: dfsrouter-r3
     container_name: dfsrouter-r3
     restart: always
@@ -74,7 +74,7 @@ services:
       - ./hadoop.env
 
   journalnode-jn1:
-    image: symious/hadoop-journalnode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-journalnode
     hostname: journalnode-jn1
     container_name: journalnode-jn1
     restart: always
@@ -87,7 +87,7 @@ services:
       - ./hadoop.env
 
   journalnode-jn2:
-    image: symious/hadoop-journalnode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-journalnode
     hostname: journalnode-jn2
     container_name: journalnode-jn2
     restart: always
@@ -100,7 +100,7 @@ services:
       - ./hadoop.env
 
   journalnode-jn3:
-    image: symious/hadoop-journalnode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-journalnode
     hostname: journalnode-jn3
     container_name: journalnode-jn3
     restart: always
@@ -113,7 +113,7 @@ services:
       - ./hadoop.env
 
   namenode-ns1-nn1:
-    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-namenode
     hostname: namenode-ns1-nn1
     container_name: namenode-ns1-nn1
     restart: always
@@ -129,7 +129,7 @@ services:
       - ./hadoop.env
 
   namenode-ns1-nn2:
-    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-namenode
     hostname: namenode-ns1-nn2
     container_name: namenode-ns1-nn2
     restart: always
@@ -142,7 +142,7 @@ services:
       - ./hadoop.env
 
   namenode-ns1-ob1:
-    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-namenode
     hostname: namenode-ns1-ob1
     container_name: namenode-ns1-ob1
     restart: always
@@ -150,26 +150,26 @@ services:
       - 9872:9870
       - 9002:9000
     environment:
-      - SERVICE_PRECONDITION="namenode-ns1-nn1:9000 namenode-ns1-nn2:9000"
+#      - SERVICE_PRECONDITION="namenode-ns1-nn1:9000 namenode-ns1-nn2:9000"
       - ROLE=observer
     volumes:
       - hadoop_namenode_ns1_ob1:/hadoop/dfs/name
     env_file:
       - ./hadoop.env
 
-  namenode-ns1-ob1-transition:
-    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
-    hostname: namenode-ns1-ob1-transition
-    container_name: namenode-ns1-ob1-transition
-    restart: no
-    env_file:
-      - ./hadoop.env
-    depends_on:
-      - namenode-ns1-ob1
-    entrypoint:  [ "$HADOOP_HOME/bin/hdfs", "haadmin", "-ns", "ns1", "-transitionToObserver", "--forcemanual", "ob1"  ]
+#  namenode-ns1-ob1-transition:
+#    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211103
+#    hostname: namenode-ns1-ob1-transition
+#    container_name: namenode-ns1-ob1-transition
+#    restart: no
+#    env_file:
+#      - ./hadoop.env
+#    depends_on:
+#      - namenode-ns1-ob1
+#    entrypoint:  [ "$HADOOP_HOME/bin/hdfs", "haadmin", "-ns", "ns1", "-transitionToObserver", "--forcemanual", "ob1"  ]
 
   namenode-ns2-nn1:
-    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-namenode
     hostname: namenode-ns2-nn1
     container_name: namenode-ns2-nn1
     restart: always
@@ -185,7 +185,7 @@ services:
       - ./hadoop.env
 
   namenode-ns2-nn2:
-    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-namenode
     hostname: namenode-ns2-nn2
     container_name: namenode-ns2-nn2
     restart: always
@@ -198,7 +198,7 @@ services:
       - ./hadoop.env
 
   namenode-ns2-ob1:
-    image: symious/hadoop-namenode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-namenode
     hostname: namenode-ns2-ob1
     container_name: namenode-ns2-ob1
     restart: always
@@ -206,7 +206,7 @@ services:
       - 19872:9870
       - 19002:9000
     environment:
-      - SERVICE_PRECONDITION="namenode-ns2-nn1:9000 namenode-ns2-nn2:9000"
+#      - SERVICE_PRECONDITION="namenode-ns2-nn1:9000 namenode-ns2-nn2:9000"
       - ROLE=observer
     volumes:
       - hadoop_namenode_ns2_ob1:/hadoop/dfs/name
@@ -214,7 +214,7 @@ services:
       - ./hadoop.env
 
   datanode-dn1:
-    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-datanode
     hostname: datanode-dn1
     container_name: datanode-dn1
     restart: always
@@ -222,11 +222,13 @@ services:
       - 9864:9864
     volumes:
       - hadoop_datanode_dn1:/hadoop/dfs/data
+#    environment:
+#      - HADOOP_DATANODE_OPTS="-Dhadoop.root.logger=DEBUG,console"
     env_file:
       - ./hadoop.env
 
   datanode-dn2:
-    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-datanode
     hostname: datanode-dn2
     container_name: datanode-dn2
     restart: always
@@ -238,7 +240,7 @@ services:
       - ./hadoop.env
 
   datanode-dn3:
-    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-datanode
     hostname: datanode-dn3
     container_name: datanode-dn3
     restart: always
@@ -250,7 +252,7 @@ services:
       - ./hadoop.env
 
   datanode-dn4:
-    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-datanode
     hostname: datanode-dn4
     container_name: datanode-dn4
     restart: always
@@ -262,7 +264,7 @@ services:
       - ./hadoop.env
 
   datanode-dn5:
-    image: symious/hadoop-datanode:3.4.0-SNAPSHOT_20211027
+    image: symious/hadoop-datanode
     hostname: datanode-dn5
     container_name: datanode-dn5
     restart: always

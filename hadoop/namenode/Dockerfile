@@ -1,4 +1,4 @@
-FROM symious/hadoop-base:3.4.0-SNAPSHOT_20211027
+FROM symious/hadoop-base
 
 HEALTHCHECK CMD curl -f http://localhost:9870/ || exit 1
 
